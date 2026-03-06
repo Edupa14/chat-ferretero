@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferretería Asistente</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #111b21;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: #0b141a;
+      border-radius: 40px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    }
+
+    /* Status bar */
+    .status-bar {
+      background: #1f2c34;
+      padding: 8px 20px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 600;
+    }
+    .status-bar .time { font-size: 15px; font-weight: 700; }
+    .status-icons { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+
+    /* Header */
+    .header {
+      background: #1f2c34;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #2a3942;
+    }
+
+    .back-btn { color: #00a884; font-size: 22px; cursor: pointer; }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00a884, #007a63);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .contact-info { flex: 1; }
+    .contact-name { color: #e9edef; font-size: 16px; font-weight: 600; }
+    .contact-status { color: #8696a0; font-size: 13px; }
+
+    .header-actions { display: flex; gap: 20px; color: #8696a0; font-size: 20px; }
+    .header-actions span { cursor: pointer; }
+
+    /* Chat area */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      background-color: #0b141a;
+      scroll-behavior: smooth;
+    }
+    .chat-area::-webkit-scrollbar { width: 4px; }
+    .chat-area::-webkit-scrollbar-thumb { background: #3b4a54; border-radius: 4px; }
+
+    .date-divider { text-align: center; margin: 12px 0; }
+    .date-divider span {
+      background: #1f2c34;
+      color: #8696a0;
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 8px;
+    }
+
+    /* Messages */
+    .msg-row { display: flex; margin-bottom: 4px; }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.bot  { justify-content: flex-start; }
+
+    .bubble {
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14.5px;
+      line-height: 1.45;
+    }
+    .bubble.user {
+      background: #005c4b;
+      color: #e9edef;
+      border-top-right-radius: 2px;
+    }
+    .bubble.bot {
+      background: #202c33;
+      color: #e9edef;
+      border-top-left-radius: 2px;
+    }
+
+    .time-stamp {
+      font-size: 11px;
+      color: #8696a0;
+      margin-top: 4px;
+      text-align: right;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 4px;
+    }
+    .bubble.user .time-stamp { color: #a9c4b6; }
+    .double-check { color: #53bdeb; }
+
+    .forwarded-tag {
+      font-size: 12px;
+      color: #8696a0;
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+
+    /* Product cards */
+    .section-title {
+      color: #00a884;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 8px 0 6px;
+    }
+    .product-item {
+      background: #2a3942;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 5px;
+      border-left: 3px solid #00a884;
+    }
+    .product-name { font-weight: 600; color: #e9edef; font-size: 14px; }
+    .product-spec { color: #8696a0; font-size: 12px; margin-top: 2px; }
+    .product-qty  { color: #00a884; font-size: 12px; font-weight: 700; margin-top: 2px; }
+
+    .tip-box {
+      background: #1a2a22;
+      border: 1px solid #00a88430;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #8696a0;
+    }
+    .tip-box strong { color: #00a884; }
+
+    .plain-text { white-space: pre-wrap; }
+
+    /* Typing */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #202c33;
+      border-radius: 8px;
+      border-top-left-radius: 2px;
+      width: fit-content;
+      margin-bottom: 6px;
+    }
+    .typing-indicator.show { display: flex; }
+    .dot {
+      width: 7px; height: 7px;
+      background: #8696a0;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); opacity: 0.5; }
+      30%          { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* Quick chips */
+    .quick-chips {
+      padding: 8px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      background: #0b141a;
+    }
+    .quick-chips::-webkit-scrollbar { display: none; }
+    .chip {
+      background: #202c33;
+      color: #00a884;
+      border: 1px solid #00a88450;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .chip:hover { background: #2a3942; }
+
+    /* Image preview above input */
+    .img-preview-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      background: #1f2c34;
+      border-top: 1px solid #2a3942;
+    }
+    .img-preview-bar.show { display: flex; }
+    .img-preview-bar img {
+      width: 60px; height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid #00a884;
+    }
+    .img-preview-bar .remove-img {
+      background: #3b4a54;
+      color: #e9edef;
+      border: none;
+      border-radius: 50%;
+      width: 22px; height: 22px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .img-preview-bar .img-label {
+      color: #8696a0; font-size: 12px; flex: 1;
+    }
+
+    /* Input */
+    .input-area {
+      padding: 8px 12px;
+      background: #1f2c34;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .input-wrapper {
+      flex: 1;
+      background: #2a3942;
+      border-radius: 24px;
+      display: flex;
+      align-items: flex-end;
+      padding: 8px 14px;
+      gap: 8px;
+    }
+    .input-icon { color: #8696a0; font-size: 20px; cursor: pointer; }
+    #msg-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e9edef;
+      font-size: 15px;
+      resize: none;
+      max-height: 120px;
+      font-family: inherit;
+      line-height: 1.4;
+    }
+    #msg-input::placeholder { color: #8696a0; }
+
+    .send-btn {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: #00a884;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .send-btn:hover    { background: #00cf9d; }
+    .send-btn:disabled { background: #3b4a54; cursor: not-allowed; }
+    .send-btn svg { width: 22px; height: 22px; fill: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span class="time" id="clock">9:41</span>
+    <div class="status-icons">📶 🔋</div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="back-btn">‹</div>
+    <div class="avatar">🛒</div>
+    <div class="contact-info">
+      <div class="contact-name">Ferretero</div>
+      <div class="contact-status" id="bot-status">en línea</div>
+    </div>
+    <div class="header-actions">
+      <span>📹</span>
+      <span>📞</span>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-area" id="chat-area">
+    <div class="date-divider"><span>Hoy</span></div>
+
+    <div class="msg-row bot">
+      <div class="bubble bot">
+        <div>👋 ¡Hola! Soy <strong>Ferretero</strong>, tu asistente de ferretería.</div>
+        <br>
+        <div>Pégame aquí la lista o el mensaje que te mandó el maestro, gasfitero o técnico, y yo te digo exactamente <strong>qué pedir y en qué cantidad</strong>. 🔧</div>
+        <div class="time-stamp" id="welcome-time">9:41</div>
+      </div>
+    </div>
+
+    <div class="typing-indicator" id="typing">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Quick chips -->
+  <div class="quick-chips" id="quick-chips">
+    <div class="chip" onclick="sendQuick('3 cuerpos sellados, 2 cuerpos cortados y una tapa')">🔧 Lista gasfitero</div>
+    <div class="chip" onclick="sendQuick('ladrillo de 18 huecos 1 millar, cemento azul 15 bolsas')">🧱 Material albañil</div>
+    <div class="chip" onclick="sendQuick('5 mts arena gruesa, 5 mts gravilla 1/2, 3 mts piedra base, 15 bls cemento Azul')">📝 Lista manuscrita</div>
+    <div class="chip" onclick="sendQuick('necesito instalar una llave de paso nueva y cambiar el flotador del baño')">🚿 Gasfitería</div>
+  </div>
+
+  <!-- Image preview -->
+  <div class="img-preview-bar" id="img-preview-bar">
+    <img id="img-preview-thumb" src="" alt="preview" />
+    <span class="img-label">📷 Foto adjunta — puedes agregar texto opcional</span>
+    <button class="remove-img" onclick="clearImage()" title="Quitar imagen">✕</button>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="onImageSelected(event)" />
+    <div class="input-wrapper">
+      <span class="input-icon">😊</span>
+      <textarea
+        id="msg-input"
+        placeholder="Pega la lista del maestro..."
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <span class="input-icon" onclick="document.getElementById('file-input').click()" title="Adjuntar foto">📷</span>
+    </div>
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // ── Reloj en tiempo real ──────────────────────────────────────────────────
+  function updateClock() {
+    const now = new Date();
+    const t = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('clock').textContent = t;
+    document.getElementById('welcome-time').textContent = t;
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // ── Modo demo: true si no hay servidor, false si corre npm start ─────────
+  let DEMO_MODE = true;
+
+  fetch('/api/ping')
+    .then(r => r.json())
+    .then(data => { DEMO_MODE = data.demo; })
+    .catch(() => { DEMO_MODE = true; });
+
+  const DEMO_RESPONSES = {
+    gasfitero: {
+      keywords: ['cuerpo sellado', 'cuerpo cortado', 'tapa'],
+      reply: `Claro, eso es material de gasfitería PVC. Acá te explico qué pedir:
+
+1. 3 Uniones PVC de 1/2" (cuerpos sellados) — son las que unen dos tubos sin rosca
+2. 2 Codos PVC de 90° x 1/2" (cuerpos cortados) — para cambiar dirección de la tubería
+3. 1 Tapón PVC hembra de 1/2" (la tapa) — para sellar un extremo
+
+Tip: pide también 1 rollo de cinta teflón y 1 frasco pequeño de pegamento para PVC, te van a hacer falta para el sellado. 🔧`
+    },
+    albanil: {
+      keywords: ['18 huecos', 'millar', 'cemento azul', 'cemento sol'],
+      reply: `Eso es material de construcción para levantar muro. Te detallo:
+
+1. 1,000 unidades Ladrillo King Kong 18 huecos (el millar) — para muros de cabeza o soga
+2. 15 bolsas Cemento Sol tipo I x 42.5 kg (el "cemento azul") — para mezcla y asentado
+
+Tip: para 1 millar de ladrillo necesitas aproximadamente 8 a 10 bolsas de cemento y 1.5 m³ de arena gruesa para el asentado. Pregunta si también necesitas arena. 🧱`
+    },
+    lista_manuscrita: {
+      keywords: ['arena gruesa', 'gravilla', 'piedra base', 'bls cemento'],
+      reply: `Leí la nota, son agregados y cemento para vaciado de concreto. Lo que debes pedir:
+
+1. 5 m³ Arena gruesa — para mezcla de concreto
+2. 5 m³ Gravilla de 1/2 pulgada — agregado fino para concreto
+3. 3 m³ Piedra base (piedra mediana chancada) — agregado grueso
+4. 15 bolsas Cemento Sol tipo I x 42.5 kg
+
+Tip: con esos agregados y el cemento da para aprox. 8 m³ de concreto f'c=175 kg/cm². Si el maestro no te indicó la proporción, pregúntale si es para losa o columnas. 📦`
+    },
+    gasfiteria_general: {
+      keywords: ['llave de paso', 'flotador', 'tanque', 'inodoro', 'caño'],
+      reply: `Para esos dos arreglos necesitas:
+
+1. 1 Válvula de paso de 1/2" (la llave de paso) — pide de palanca, son más durables que las de bola
+2. 1 Válvula flotadora para tanque (el flotador) — especifica si tu tanque es bajo o alto, cambia el modelo
+
+Tip: lleva la medida del tubo de entrada a la llave de paso (normalmente 1/2" pero puede ser 3/4"). Y para el flotador lleva una foto del tanque si puedes, hay de entrada lateral y entrada inferior. 🚿`
+    },
+    imagen: {
+      keywords: ['__image__'],
+      reply: `Revisé la foto de la nota 📷. Acá está la lista de lo que necesitas comprar:
+
+1. 5 m³ Arena gruesa — para mezcla de concreto
+2. 5 m³ Gravilla de 1/2 pulgada — agregado fino
+3. 3 m³ Piedra base chancada — agregado grueso
+4. 15 bolsas Cemento Sol tipo I x 42.5 kg (el cemento azul)
+
+Tip: para esa cantidad de agregados te rinde para unos 8 m³ de concreto. Coordina el delivery porque son volúmenes grandes. ¿Necesitas algo más? 📦`
+    }
+  };
+
+  function getDemoReply(text, hasImage) {
+    if (hasImage) return DEMO_RESPONSES.imagen.reply;
+    const lower = text.toLowerCase();
+    for (const key of Object.keys(DEMO_RESPONSES)) {
+      if (key === 'imagen') continue;
+      if (DEMO_RESPONSES[key].keywords.some(kw => lower.includes(kw))) {
+        return DEMO_RESPONSES[key].reply;
+      }
+    }
+    // Respuesta genérica
+    return `Entendido, revisé tu lista. Para conseguir esos materiales en la ferretería necesitas pedirlos con estas especificaciones:\n\n1. ${text.split(',')[0].trim()} — pide la medida exacta al vendedor\n\nSi tienes más dudas sobre algún producto, ¡pregúntame! 🛒`;
+  }
+
+  // ── Estado ────────────────────────────────────────────────────────────────
+  let isLoading  = false;
+  let pendingImg = null;
+  const history  = [];
+
+  // ── Helpers UI ────────────────────────────────────────────────────────────
+  function getTime() {
+    const n = new Date();
+    return n.getHours() + ':' + String(n.getMinutes()).padStart(2, '0');
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function sendQuick(text) {
+    document.getElementById('msg-input').value = text;
+    sendMessage();
+  }
+
+  // ── Manejo de imagen ──────────────────────────────────────────────────────
+  function onImageSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    resizeImage(file, 1024, (base64) => {
+      pendingImg = base64;
+      document.getElementById('img-preview-thumb').src = base64;
+      document.getElementById('img-preview-bar').classList.add('show');
+      document.getElementById('msg-input').placeholder = 'Texto opcional (ej: es para el baño del 2do piso)...';
+      document.getElementById('msg-input').focus();
+    });
+    // reset para poder seleccionar la misma imagen de nuevo
+    e.target.value = '';
+  }
+
+  function clearImage() {
+    pendingImg = null;
+    document.getElementById('img-preview-bar').classList.remove('show');
+    document.getElementById('img-preview-thumb').src = '';
+    document.getElementById('msg-input').placeholder = 'Pega la lista del maestro...';
+  }
+
+  // Redimensiona imagen a maxPx en el lado más largo, devuelve base64 JPEG
+  function resizeImage(file, maxPx, callback) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function scrollToBottom() {
+    const chat = document.getElementById('chat-area');
+    setTimeout(() => chat.scrollTop = chat.scrollHeight, 60);
+  }
+
+  function showTyping(show) {
+    document.getElementById('typing').className =
+      show ? 'typing-indicator show' : 'typing-indicator';
+    if (show) scrollToBottom();
+  }
+
+  function setStatus(text) {
+    document.getElementById('bot-status').textContent = text;
+  }
+
+  // ── Agregar burbuja usuario ───────────────────────────────────────────────
+  function addUserBubble(text, imgBase64 = null) {
+    const chat = document.getElementById('chat-area');
+    const typing = document.getElementById('typing');
+    const row = document.createElement('div');
+    row.className = 'msg-row user';
+
+    let inner = `<div class="forwarded-tag">↪ Reenviado</div>`;
+
+    if (imgBase64) {
+      inner += `<img src="${imgBase64}" style="
+        width:100%; max-width:220px; border-radius:8px;
+        display:block; margin-bottom:${text ? '6px' : '0'};
+      " />`;
+    }
+    if (text) {
+      inner += `<div>${escHtml(text)}</div>`;
+    }
+    inner += `<div class="time-stamp">${getTime()} <span class="double-check">✓✓</span></div>`;
+
+    row.innerHTML = `<div class="bubble user">${inner}</div>`;
+    chat.insertBefore(row, typing);
+    scrollToBottom();
+  }
+
+  // ── Agregar burbuja bot ───────────────────────────────────────────────────
+  function addBotBubble(text) {
+    const chat = document.getElementById('chat-area');
+    const typing = document.getElementById('typing');
+    const row = document.createElement('div');
+    row.className = 'msg-row bot';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble bot';
+    bubble.innerHTML = renderResponse(text);
+    bubble.innerHTML += `<div class="time-stamp">${getTime()}</div>`;
+    row.appendChild(bubble);
+    chat.insertBefore(row, typing);
+    scrollToBottom();
+  }
+
+  // ── Renderizar respuesta con tarjetas ────────────────────────────────────
+  function renderResponse(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    let intro = [], items = [], tip = [], inItems = false, inTip = false;
+
+    lines.forEach(line => {
+      const isItem = /^\d+[\.\-\)]/.test(line) || /^[•\-\*]/.test(line);
+      const isTip  = /^(tip|consejo|recuerda|también|además|nota)/i.test(line);
+
+      if (isTip) { inTip = true; }
+      if (inTip)  { tip.push(line); return; }
+      if (isItem) { inItems = true; }
+
+      if (inItems) {
+        if (isItem) {
+          items.push(line.replace(/^[\d\.\-\)\•\*]\s*/, ''));
+        } else if (items.length) {
+          // sub-línea del mismo ítem
+          items[items.length - 1] += '\n' + line;
+        }
+      } else {
+        intro.push(line);
+      }
+    });
+
+    // Sin ítems detectados → texto plano
+    if (!items.length) {
+      return `<div class="plain-text">${escHtml(text)}</div>`;
+    }
+
+    let html = '';
+    if (intro.length) {
+      html += `<div style="margin-bottom:10px;color:#a0b4be;">${escHtml(intro.join(' '))}</div>`;
+    }
+
+    html += `<div class="section-title">🛒 Lista de compras</div>`;
+
+    items.forEach(raw => {
+      const subLines = raw.split('\n');
+      const mainLine = subLines[0];
+
+      // Extraer cantidad del inicio: "3 uniones...", "15 bolsas..."
+      const qtyMatch = mainLine.match(/^(\d+[\s]*(unid\.?|und\.?|bolsas?|bls\.?|m3|mts?|metros?|millar|kg|litros?|lts?|tubos?|rollos?|pzas?|piezas?|cuerpos?|galones?|gal\.?|planchas?|barras?|cajas?)?\.?)\s*/i);
+      const qty  = qtyMatch ? qtyMatch[0].trim() : '';
+      const name = mainLine.replace(qty, '').trim();
+      const spec = subLines.slice(1).join(' ').trim();
+
+      html += `<div class="product-item">`;
+      if (qty)  html += `<div class="product-qty">× ${escHtml(qty)}</div>`;
+      html += `<div class="product-name">${escHtml(name)}</div>`;
+      if (spec) html += `<div class="product-spec">${escHtml(spec)}</div>`;
+      html += `</div>`;
+    });
+
+    if (tip.length) {
+      html += `<div class="tip-box"><strong>💡 Tip:</strong> ${escHtml(tip.join(' '))}</div>`;
+    }
+
+    return html;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Enviar mensaje ────────────────────────────────────────────────────────
+  async function sendMessage() {
+    if (isLoading) return;
+    const input = document.getElementById('msg-input');
+    const text  = input.value.trim();
+    const img   = pendingImg;
+
+    if (!text && !img) return;
+
+    // Ocultar chips la primera vez
+    document.getElementById('quick-chips').style.display = 'none';
+
+    input.value = '';
+    input.style.height = 'auto';
+    if (img) clearImage();
+
+    isLoading = true;
+    document.getElementById('send-btn').disabled = true;
+    setStatus('escribiendo...');
+
+    addUserBubble(text, img);
+    showTyping(true);
+
+    // Para historial texto plano (no guardamos base64 en history para no inflar)
+    const historyContent = img
+      ? `[imagen adjunta]${text ? ' — ' + text : ''}`
+      : text;
+    history.push({ role: 'user', content: historyContent });
+
+    try {
+      let reply;
+
+      if (DEMO_MODE) {
+        // Simula delay de red + escritura (1.5 – 2.5 s)
+        await new Promise(r => setTimeout(r, 1500 + Math.random() * 1000));
+        reply = getDemoReply(text, !!img);
+      } else {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            image:   img || undefined,
+            history: history.slice(0, -1)
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || `HTTP ${res.status}`);
+        }
+        ({ reply } = await res.json());
+      }
+
+      history.push({ role: 'assistant', content: reply });
+      showTyping(false);
+      addBotBubble(reply);
+
+    } catch (err) {
+      showTyping(false);
+      history.pop();
+      addBotBubble(`⚠️ Error: ${err.message}`);
+    } finally {
+      isLoading = false;
+      document.getElementById('send-btn').disabled = false;
+      setStatus('en línea');
+    }
+  }
+</script>
+</body>
+</html>
