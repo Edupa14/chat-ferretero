@@ -340,9 +340,9 @@
 
   <!-- Quick chips -->
   <div class="quick-chips" id="quick-chips">
-    <div class="chip" onclick="sendQuick('3 cuerpos sellados, 2 cuerpos cortados y una tapa')">🔧 Lista gasfitero</div>
-    <div class="chip" onclick="sendQuick('ladrillo de 18 huecos 1 millar, cemento azul 15 bolsas')">🧱 Material albañil</div>
-    <div class="chip" onclick="sendQuick('5 mts arena gruesa, 5 mts gravilla 1/2, 3 mts piedra base, 15 bls cemento Azul')">📝 Lista manuscrita</div>
+    <div class="chip" onclick="sendQuickWithImage('/public/images/gasfitero.png', 'ayúdame con esto')">🔧 Lista gasfitero</div>
+    <div class="chip" onclick="sendQuickWithImage('/public/images/albanil.png', 'qué necesito comprar')">🧱 Material albañil</div>
+    <div class="chip" onclick="sendQuickWithImage('/public/images/nota-manuscrita.png', 'ayúdame con esta lista')">📝 Lista manuscrita</div>
     <div class="chip" onclick="sendQuick('necesito instalar una llave de paso nueva y cambiar el flotador del baño')">🚿 Gasfitería</div>
   </div>
 
@@ -482,6 +482,26 @@ Tip: para esa cantidad de agregados te rinde para unos 8 m³ de concreto. Coordi
   function sendQuick(text) {
     document.getElementById('msg-input').value = text;
     sendMessage();
+  }
+
+  // Carga imagen desde URL del servidor, la convierte a base64 y envía con texto
+  async function sendQuickWithImage(imgUrl, text) {
+    try {
+      const res  = await fetch(imgUrl);
+      const blob = await res.blob();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        pendingImg = e.target.result;
+        document.getElementById('img-preview-thumb').src = pendingImg;
+        document.getElementById('img-preview-bar').classList.add('show');
+        document.getElementById('msg-input').value = text;
+        sendMessage();
+      };
+      reader.readAsDataURL(blob);
+    } catch {
+      // fallback a solo texto si no carga la imagen
+      sendQuick(text);
+    }
   }
 
   // ── Manejo de imagen ──────────────────────────────────────────────────────

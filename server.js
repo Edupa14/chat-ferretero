@@ -18,6 +18,7 @@ const GROQ_MODEL_VISION = 'meta-llama/llama-4-scout-17b-16e-instruct'; // soport
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 const SYSTEM_PROMPT = `Eres un asistente experto de una ferretería en Perú. Tu nombre es "Ferretero", un ayudante amigable y conocedor.
 
@@ -53,7 +54,7 @@ FORMATO DE RESPUESTA:
 - Máximo 2-3 oraciones de introducción antes de la lista
 - Sé preciso pero sin tecnicismos innecesarios para el cliente`;
 
-app.get('/api/ping', (req, res) => res.json({ demo: false }));
+app.get('/api/ping', (_req, res) => res.json({ demo: false }));
 
 app.post('/api/chat', async (req, res) => {
   const { message, image, history = [] } = req.body;
@@ -80,11 +81,18 @@ app.post('/api/chat', async (req, res) => {
   ];
 
   const model = image ? GROQ_MODEL_VISION : GROQ_MODEL_TEXT;
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
 
-  console.log(`\n📨 [${new Date().toLocaleTimeString()}] Nueva solicitud`);
+  console.log(`\n${'─'.repeat(60)}`);
+  console.log(`📨 [${new Date().toLocaleTimeString()}] Nueva solicitud`);
+  console.log(`   IP     : ${ip}`);
   console.log(`   Tipo   : ${image ? '🖼️  imagen' : '💬 texto'}`);
   console.log(`   Modelo : ${model}`);
-  console.log(`   Mensaje: ${(message || '(solo imagen)').slice(0, 80)}`);
+  console.log(`\n── PAYLOAD ENVIADO A GROQ ──────────────────────────────`);
+  console.log(`   Mensaje: ${message || '(solo imagen)'}`);
+  if (image) console.log(`   Imagen : ${image.slice(0, 40)}... [${Math.round(image.length * 0.75 / 1024)} KB]`);
+  console.log(`   Historial (${history.length} turnos previos):`);
+  history.forEach((m, i) => console.log(`     [${i + 1}] ${m.role}: ${String(m.content).slice(0, 100)}`));
   console.log(`   → Enviando a Groq...`);
 
   const t0 = Date.now();
@@ -116,9 +124,12 @@ app.post('/api/chat', async (req, res) => {
     const reply = data.choices[0].message.content;
     const usage = data.usage;
 
-    console.log(`   ✅ Respuesta OK en ${ms}ms`);
+    console.log(`\n── RESPUESTA DE GROQ ───────────────────────────────`);
+    console.log(`   ✅ OK en ${ms}ms`);
     console.log(`   Tokens : ${usage?.prompt_tokens} prompt + ${usage?.completion_tokens} respuesta = ${usage?.total_tokens} total`);
-    console.log(`   Preview: ${reply.slice(0, 80)}...`);
+    console.log(`   Respuesta completa:`);
+    console.log(`${reply}`);
+    console.log('─'.repeat(60));
 
     res.json({ reply });
   } catch (err) {

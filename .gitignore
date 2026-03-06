@@ -1,5 +1,9 @@
 node_modules
 .env
+# imágenes sueltas en la raíz (originales WhatsApp)
 *.jpeg
 *.jpg
 *.png
+# excluir la carpeta public del ignore
+!public/
+!public/**
