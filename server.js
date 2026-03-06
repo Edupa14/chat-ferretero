@@ -16,9 +16,21 @@ const GROQ_BASE_URL    = 'https://api.groq.com/openai/v1';
 const GROQ_MODEL_TEXT  = 'llama-3.3-70b-versatile';
 const GROQ_MODEL_VISION = 'meta-llama/llama-4-scout-17b-16e-instruct'; // soporta imágenes
 
+app.set('trust proxy', true);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
 app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// Log de cada acceso a la página principal
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path === '/') {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip;
+    console.log(`\n🌐 [${new Date().toLocaleTimeString()}] Acceso a la página`);
+    console.log(`   IP cliente : ${ip}`);
+    console.log(`   User-Agent : ${req.headers['user-agent']?.slice(0, 80)}`);
+  }
+  next();
+});
 
 const SYSTEM_PROMPT = `Eres un asistente experto de una ferretería en Perú. Tu nombre es "Ferretero", un ayudante amigable y conocedor.
 
@@ -61,6 +73,11 @@ FORMATO DE RESPUESTA:
 - Máximo 2-3 oraciones de introducción antes de la lista
 - Sé preciso pero sin tecnicismos innecesarios para el cliente`;
 
+app.get('/api/my-ip', (req, res) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip;
+  res.json({ ip });
+});
+
 app.get('/api/ping', (_req, res) => res.json({ demo: false }));
 
 app.post('/api/chat', async (req, res) => {
@@ -88,7 +105,7 @@ app.post('/api/chat', async (req, res) => {
   ];
 
   const model = image ? GROQ_MODEL_VISION : GROQ_MODEL_TEXT;
-  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
+  const ip = req.body.clientIp || req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip;
 
   console.log(`\n${'─'.repeat(60)}`);
   console.log(`📨 [${new Date().toLocaleTimeString()}] Nueva solicitud`);

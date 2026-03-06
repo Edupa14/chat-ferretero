@@ -459,6 +459,13 @@ Tip: para esa cantidad de agregados te rinde para unos 8 m³ de concreto. Coordi
     return `Entendido, revisé tu lista. Para conseguir esos materiales en la ferretería necesitas pedirlos con estas especificaciones:\n\n1. ${text.split(',')[0].trim()} — pide la medida exacta al vendedor\n\nSi tienes más dudas sobre algún producto, ¡pregúntame! 🛒`;
   }
 
+  // ── IP del cliente (obtenida del servidor al cargar) ─────────────────────
+  let clientIp = 'desconocida';
+  fetch('/api/my-ip')
+    .then(r => r.json())
+    .then(d => { clientIp = d.ip; })
+    .catch(() => {});
+
   // ── Estado ────────────────────────────────────────────────────────────────
   let isLoading  = false;
   let pendingImg = null;
@@ -705,9 +712,10 @@ Tip: para esa cantidad de agregados te rinde para unos 8 m³ de concreto. Coordi
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: text,
-            image:   img || undefined,
-            history: history.slice(0, -1)
+            message:  text,
+            image:    img || undefined,
+            history:  history.slice(0, -1),
+            clientIp
           })
         });
         if (!res.ok) {
